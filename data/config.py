@@ -155,6 +155,32 @@ coco2017_testdev_dataset = dataset_base.copy({
     'label_map': COCO_LABEL_MAP
 })
 
+rollerInstanceSegmentation_dataset = dataset_base.copy({
+    'name': 'rollerInstanceSegmentation',
+    
+    'train_info': '/auto/shared/client_data/image_database/COCO_format_datasets/rollerInstanceSegmentation-2022-06-29-15-48-49.546778/rollerInstanceSegmentation_2022-06-29-15-48-49.546778-train.json',
+    'train_images': '/auto/shared/client_data/image_database/COCO_format_datasets/rollerInstanceSegmentation-2022-06-29-15-48-49.546778/train_images',
+    
+    'valid_info': '/auto/shared/client_data/image_database/COCO_format_datasets/rollerInstanceSegmentation-2022-06-29-15-48-49.546778/rollerInstanceSegmentation_2022-06-29-15-48-49.546778-valid.json',
+    'valid_images': '/auto/shared/client_data/image_database/COCO_format_datasets/rollerInstanceSegmentation-2022-06-29-15-48-49.546778/valid_images',
+    
+    'class_names': ('potato'),
+    'label_map': { 1:  1 }    
+})
+
+
+cig_butts_dataset = dataset_base.copy({
+  'name': 'Immersive Limit - Cigarette Butts',
+  'train_info': '/auto/shared/client_data/image_database/COCO_format_datasets/cig_butts/train/coco_annotations.json',
+  'train_images': '/auto/shared/client_data/image_database/COCO_format_datasets/cig_butts/train/images/',
+  'valid_info': '/auto/shared/client_data/image_database/COCO_format_datasets/cig_butts/val/coco_annotations.json',
+  'valid_images': '/auto/shared/client_data/image_database/COCO_format_datasets/cig_butts/val/images/',
+  'class_names': ('cig_butt'),
+  'label_map': { 1:  1 }
+})
+
+
+
 PASCAL_CLASSES = ("aeroplane", "bicycle", "bird", "boat", "bottle",
                   "bus", "car", "cat", "chair", "cow", "diningtable",
                   "dog", "horse", "motorbike", "person", "pottedplant",
@@ -765,6 +791,28 @@ yolact_resnet50_pascal_config = yolact_resnet50_config.copy({
         'pred_scales': [[32], [64], [128], [256], [512]],
         'use_square_anchors': False,
     })
+})
+
+
+yolact_resnet50_rollerInstanceSegmentation_config = yolact_resnet50_config.copy({
+    'name': 'yolact_resnet50_rollerInstanceSegmentation',
+    'dataset': rollerInstanceSegmentation_dataset,
+    'num_classes': len(rollerInstanceSegmentation_dataset.class_names) + 1,
+    
+    'max_size': 512
+})
+
+
+rollerInstanceSegmentation_config = yolact_resnet50_rollerInstanceSegmentation_config
+
+yolact_resnet50_cig_butts_config = yolact_resnet50_config.copy({
+    'name': 'yolact_plus_resnet50_cig_butts',
+    # Dataset stuff
+    'dataset': cig_butts_dataset,
+    'num_classes': len(cig_butts_dataset.class_names) + 1,
+
+    # Image Size
+    'max_size': 512,
 })
 
 # ----------------------- YOLACT++ CONFIGS ----------------------- #

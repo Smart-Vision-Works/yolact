@@ -464,10 +464,10 @@ def prep_metrics(ap_data, dets, img, gt, gt_masks, h, w, num_crowd, image_id, de
 
             for iou_type, iou_func, crowd_func, score_func, indices in iou_types:
                 gt_used = [False] * len(gt_classes)
-                
+                if _class >= len(ap_data[iou_type][iouIdx]):
+                    continue
+                    
                 ap_obj = ap_data[iou_type][iouIdx][_class]
-                ap_obj.add_gt_positives(num_gt_for_class)
-
                 for i in indices:
                     if classes[i] != _class:
                         continue
@@ -1074,6 +1074,7 @@ if __name__ == '__main__':
         if not os.path.exists('results'):
             os.makedirs('results')
 
+
         if args.cuda:
             cudnn.fastest = True
             torch.set_default_tensor_type('torch.cuda.FloatTensor')
@@ -1101,7 +1102,4 @@ if __name__ == '__main__':
 
         if args.cuda:
             net = net.cuda()
-
         evaluate(net, dataset)
-
-

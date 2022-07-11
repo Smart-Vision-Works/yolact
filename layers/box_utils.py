@@ -44,6 +44,8 @@ def intersect(box_a, box_b):
     n = box_a.size(0)
     A = box_a.size(1)
     B = box_b.size(1)
+    box_a = box_a.cuda()
+    box_b = box_b.cuda()
     max_xy = torch.min(box_a[:, :, 2:].unsqueeze(2).expand(n, A, B, 2),
                        box_b[:, :, 2:].unsqueeze(1).expand(n, A, B, 2))
     min_xy = torch.max(box_a[:, :, :2].unsqueeze(2).expand(n, A, B, 2),
@@ -74,6 +76,8 @@ def jaccard(box_a, box_b, iscrowd:bool=False):
               (box_a[:, :, 3]-box_a[:, :, 1])).unsqueeze(2).expand_as(inter)  # [A,B]
     area_b = ((box_b[:, :, 2]-box_b[:, :, 0]) *
               (box_b[:, :, 3]-box_b[:, :, 1])).unsqueeze(1).expand_as(inter)  # [A,B]
+    area_a = area_a.cuda()
+    area_b = area_b.cuda()
     union = area_a + area_b - inter
 
     out = inter / area_a if iscrowd else inter / union
@@ -105,7 +109,8 @@ def mask_iou(masks_a, masks_b, iscrowd=False):
 
     masks_a = masks_a.view(masks_a.size(0), -1)
     masks_b = masks_b.view(masks_b.size(0), -1)
-
+    masks_a = masks_a.cuda()
+    masks_b = masks_b.cuda()
     intersection = masks_a @ masks_b.t()
     area_a = masks_a.sum(dim=1).unsqueeze(1)
     area_b = masks_b.sum(dim=1).unsqueeze(0)
