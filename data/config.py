@@ -158,11 +158,11 @@ coco2017_testdev_dataset = dataset_base.copy({
 rollerInstanceSegmentation_dataset = dataset_base.copy({
     'name': 'rollerInstanceSegmentation',
     
-    'train_info': '/auto/shared/client_data/image_database/COCO_format_datasets/rollerInstanceSegmentation-2022-06-29-15-48-49.546778/rollerInstanceSegmentation_2022-06-29-15-48-49.546778-train.json',
-    'train_images': '/auto/shared/client_data/image_database/COCO_format_datasets/rollerInstanceSegmentation-2022-06-29-15-48-49.546778/train_images',
+    'train_info': 'will get set set_cfg() ',
+    'train_images': 'will get set in set_cfg()',
     
-    'valid_info': '/auto/shared/client_data/image_database/COCO_format_datasets/rollerInstanceSegmentation-2022-06-29-15-48-49.546778/rollerInstanceSegmentation_2022-06-29-15-48-49.546778-valid.json',
-    'valid_images': '/auto/shared/client_data/image_database/COCO_format_datasets/rollerInstanceSegmentation-2022-06-29-15-48-49.546778/valid_images',
+    'valid_info': 'will get set in set_cfg()',
+    'valid_images': 'will get set in set_cfg()',
     
     'class_names': ('potato'),
     'label_map': { 1:  1 }    
@@ -857,18 +857,36 @@ yolact_plus_resnet50_config = yolact_plus_base_config.copy({
 # Default config
 cfg = yolact_base_config.copy()
 
-def set_cfg(config_name:str):
+def set_cfg(config_name:str, _dataset_path = None):
     """ Sets the active config. Works even if cfg is already imported! """
     global cfg
-
+    global dataset_path
+    if _dataset_path is not None:
+        dataset_path = _dataset_path
     # Note this is not just an eval because I'm lazy, but also because it can
     # be used like ssd300_config.copy({'max_size': 400}) for extreme fine-tuning
     cfg.replace(eval(config_name))
 
     if cfg.name is None:
         cfg.name = config_name.split('_config')[0]
+        
+    if dataset_path is not None:
+        print("using dataset path")
+        cfg.train_info = f"{dataset_path}/train.json"
+        cfg.train_images = f"{dataset_path}/train_images"
+        cfg.valid_info = f"{dataset_path}/valid.json"
+        cfg.valid_images = f"{dataset_path}/valid_images"
+    else:
+        print("not using dataset path")
 
 def set_dataset(dataset_name:str):
     """ Sets the dataset of the current config. """
     cfg.dataset = eval(dataset_name)
     
+    
+    if dataset_path is not None:
+        print("using dataset path")
+        cfg.dataset.train_info = f"{dataset_path}/train.json"
+        cfg.dataset.train_images = f"{dataset_path}/train_images"
+        cfg.dataset.valid_info = f"{dataset_path}/valid.json"
+        cfg.dataset.valid_images = f"{dataset_path}/valid_images"

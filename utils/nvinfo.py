@@ -13,7 +13,6 @@ def gpu_info() -> list:
     gpu_infos = [re.match('GPU ([0-9]+): ([^(]+) \(UUID: ([^)]+)\)', gpu).groups() for gpu in gpus]
     gpu_infos = [dict(zip(['idx', 'name', 'uuid'], info)) for info in gpu_infos]
     gpu_count = len(gpus)
-
     lines = _run_cmd(['nvidia-smi'])
     selected_lines = lines[7:7 + 3 * gpu_count]
     for i in range(gpu_count):
