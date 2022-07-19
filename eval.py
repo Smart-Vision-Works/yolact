@@ -57,7 +57,7 @@ def prep_display(dets_out, img, h, w, undo_transform=True, class_color=False, ma
         save = cfg.rescore_bbox
         cfg.rescore_bbox = True
         t = postprocess(dets_out, w, h, visualize_lincomb = args.display_lincomb,
-                                        crop_masks        = args.crop,
+                                        crop_masks        = not args.no_crop,
                                         score_threshold   = args.score_threshold)
         cfg.rescore_bbox = save
 
@@ -153,6 +153,7 @@ def prep_display(dets_out, img, h, w, undo_transform=True, class_color=False, ma
                 cv2.rectangle(img_numpy, (x1, y1), (x2, y2), color, 1)
 
             if args.display_text:
+                print(cfg.dataset.class_names)
                 _class = cfg.dataset.class_names[classes[j]]
                 text_str = '%s: %.2f' % (_class, score) if args.display_scores else _class
 
@@ -173,7 +174,7 @@ def prep_display(dets_out, img, h, w, undo_transform=True, class_color=False, ma
 
 def prep_benchmark(dets_out, h, w):
     with timer.env('Postprocess'):
-        t = postprocess(dets_out, w, h, crop_masks=args.crop, score_threshold=args.score_threshold)
+        t = postprocess(dets_out, w, h, crop_masks=not args.no_crop, score_threshold=args.score_threshold)
 
     with timer.env('Copy'):
         classes, scores, boxes, masks = [x[:args.top_k] for x in t]
@@ -310,7 +311,7 @@ def prep_metrics(ap_data, dets, img, gt, gt_masks, h, w, num_crowd, image_id, de
                 crowd_classes, gt_classes = split(gt_classes)
 
     with timer.env('Postprocess'):
-        classes, scores, boxes, masks = postprocess(dets, w, h, crop_masks=args.crop, score_threshold=args.score_threshold)
+        classes, scores, boxes, masks = postprocess(dets, w, h, crop_masks=not args.no_crop, score_threshold=args.score_threshold)
 
         if classes.size(0) == 0:
             return
@@ -960,6 +961,7 @@ def main(_args):
     global args
     global cfg
     args = _args
+    print(args)
 
     if args.config is not None:
         set_cfg(args.config, _dataset_path = args.dataset_path)
@@ -974,7 +976,7 @@ def main(_args):
         # TODO: Bad practice? Probably want to do a name lookup instead.
         args.config = model_path.model_name + '_config'
         print('Config not specified. Parsed %s from the file name.\n' % args.config)
-        set_cfg(args.config)
+        set_cfg(args.config, _dataset_path = args.dataset_path)
 
     if args.detect:
         cfg.eval_mask_branch = False
@@ -1077,7 +1079,7 @@ if __name__ == '__main__':
     parser.add_argument('--image', default=None, type=str,
                         help='A path to an image to use for display.')
     parser.add_argument('--images', default=None, type=str,
-                        help='An input folder of images and output folder to save detected images. Should be in the format input->output.')
+                        help='An input folder of images and output folder to save detected images. Should be in the format input:output.')
     parser.add_argument('--video', default=None, type=str,
                         help='A path to a video to evaluate on. Passing in a number will use that index webcam.')
     parser.add_argument('--video_multiframe', default=1, type=int,
