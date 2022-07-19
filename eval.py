@@ -1099,7 +1099,7 @@ if __name__ == '__main__':
 
     global args
     args = parser.parse_args()
-    setattr(args, "dataset_path", "/auto/shared/client_data/image_database/COCO_format_datasets/rollerInstanceSegmentation-2022-06-29-15-48-49.546778")
+    setattr(args, "dataset_path", "/auto/shared/client_data/image_database/COCO_format_datasets/rollerInstanceSegmentation-2022-06-29-15-48-49.546778/valid_images")
     main(args)
 
     if args.output_web_json:
