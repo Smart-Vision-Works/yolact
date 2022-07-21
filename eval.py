@@ -1016,7 +1016,12 @@ def main(_args):
 
         print('Loading model...', end='')
         if os.path.splitext(args.trained_model)[-1]==".onnx":
-            net = YolactONNX.yolact(args.trained_model)
+            net = Yolact()
+            net.load_weights(args.trained_model)
+            net.eval()
+            if args.cuda:
+                net = net.cuda()
+            # net = YolactONNX.yolact(args.trained_model)
             print(' Done (onnx). ')
             evaluate(net, dataset, onnx=True)
         else:
@@ -1034,7 +1039,7 @@ if __name__ == '__main__':
     parser.add_argument('--trained_model',
                         default='weights/ssd300_mAP_77.43_v2.pth', type=str,
                         help='Trained state_dict file path to open. If "interrupt", this will open the interrupt file.')
-    parser.add_argument('--top_k', default=5, type=int,
+    parser.add_argument('--top_k', default=200, type=int,
                         help='Further restrict the number of predictions to parse')
     parser.add_argument('--cuda', default=True, type=str2bool,
                         help='Use cuda to evaulate model')
