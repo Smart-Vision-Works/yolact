@@ -398,7 +398,9 @@ def compute_validation_map(epoch, iteration, yolact_net, dataset, log:Log=None):
         yolact_net.train()
 
 def setup_eval():
-    eval_script.parse_args(['--no_bar', '--max_images='+str(args.validation_size)])
+    # eval_script.parse_args(['--no_bar', '--max_images='+str(args.validation_size)])
+    # TODO: fix
+    pass
 
 def main(_args):
     global args

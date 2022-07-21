@@ -1,5 +1,7 @@
 from data import COCODetection, get_label_map, MEANS, COLORS
 from yolact import Yolact
+import importlib
+YolactONNX = importlib.import_module("yolact-opencv-dnn-cpp-python.main_yolact")
 from utils.augmentations import BaseTransform, FastBaseTransform, Resize
 from utils.functions import MovingAverage, ProgressBar
 from layers.box_utils import jaccard, center_size, mask_iou
@@ -153,7 +155,6 @@ def prep_display(dets_out, img, h, w, undo_transform=True, class_color=False, ma
                 cv2.rectangle(img_numpy, (x1, y1), (x2, y2), color, 1)
 
             if args.display_text:
-                print(cfg.dataset.class_names)
                 _class = cfg.dataset.class_names[classes[j]]
                 text_str = '%s: %.2f' % (_class, score) if args.display_scores else _class
 
@@ -503,12 +504,16 @@ def badhash(x):
     x =  ((x >> 16) ^ x) & 0xFFFFFFFF
     return x
 
-def evalimage(net:Yolact, path:str, save_path:str=None):
-    frame = torch.from_numpy(cv2.imread(path)).cuda().float()
-    batch = FastBaseTransform()(frame.unsqueeze(0))
-    preds = net(batch)
-
-    img_numpy = prep_display(preds, frame, None, None, undo_transform=False)
+def evalimage(net:any, path:str, save_path:str=None, onnx=False):
+    if onnx:
+        frame = cv2.imread(path)
+        preds = net.detect(frame)
+        img_numpy = preds
+    else:
+        frame = torch.from_numpy(cv2.imread(path)).cuda().float()
+        batch = FastBaseTransform()(frame.unsqueeze(0))
+        preds = net(batch)
+        img_numpy = prep_display(preds, frame, None, None, undo_transform=False)
     
     if save_path is None:
         img_numpy = img_numpy[:, :, (2, 1, 0)]
@@ -520,7 +525,7 @@ def evalimage(net:Yolact, path:str, save_path:str=None):
     else:
         cv2.imwrite(save_path, img_numpy)
 
-def evalimages(net:Yolact, input_folder:str, output_folder:str):
+def evalimages(net:any, input_folder:str, output_folder:str, onnx=False):
     if not os.path.exists(output_folder):
         os.mkdir(output_folder)
 
@@ -531,7 +536,7 @@ def evalimages(net:Yolact, input_folder:str, output_folder:str):
         name = '.'.join(name.split('.')[:-1]) + '.png'
         out_path = os.path.join(output_folder, name)
 
-        evalimage(net, path, out_path)
+        evalimage(net, path, out_path, onnx)
         print(path + ' -> ' + out_path)
     print('Done.')
 
@@ -544,7 +549,7 @@ class CustomDataParallel(torch.nn.DataParallel):
         # Note that I don't actually want to convert everything to the output_device
         return sum(outputs, [])
 
-def evalvideo(net:Yolact, path:str, out_path:str=None):
+def evalvideo(net:any, path:str, out_path:str=None):
     # If the path is a digit, parse it as a webcam index
     is_webcam = path.isdigit()
     
@@ -778,22 +783,24 @@ def evalvideo(net:Yolact, path:str, out_path:str=None):
     
     cleanup_and_exit()
 
-def evaluate(net:Yolact, dataset, train_mode=False):
-    net.detect.use_fast_nms = args.fast_nms
-    net.detect.use_cross_class_nms = args.cross_class_nms
+def evaluate(net:any, dataset, train_mode=False, onnx=False):
+    if not onnx:
+        net.detect.use_fast_nms = args.fast_nms
+        net.detect.use_cross_class_nms = args.cross_class_nms
+
     cfg.mask_proto_debug = args.mask_proto_debug
 
     # TODO Currently we do not support Fast Mask Re-scroing in evalimage, evalimages, and evalvideo
     if args.image is not None:
         if ':' in args.image:
             inp, out = args.image.split(':')
-            evalimage(net, inp, out)
+            evalimage(net, inp, out, onnx)
         else:
-            evalimage(net, args.image)
+            evalimage(net, args.image, onnx)
         return
     elif args.images is not None:
         inp, out = args.images.split(':')
-        evalimages(net, inp, out)
+        evalimages(net, inp, out, onnx)
         return
     elif args.video is not None:
         if ':' in args.video:
@@ -961,7 +968,6 @@ def main(_args):
     global args
     global cfg
     args = _args
-    print(args)
 
     if args.config is not None:
         set_cfg(args.config, _dataset_path = args.dataset_path)
@@ -1009,14 +1015,18 @@ def main(_args):
             dataset = None        
 
         print('Loading model...', end='')
-        net = Yolact()
-        net.load_weights(args.trained_model)
-        net.eval()
-        print(' Done.')
-
-        if args.cuda:
-            net = net.cuda()
-        evaluate(net, dataset)
+        if os.path.splitext(args.trained_model)[-1]==".onnx":
+            net = YolactONNX.yolact(args.trained_model)
+            print(' Done (onnx). ')
+            evaluate(net, dataset, onnx=True)
+        else:
+            net = Yolact()
+            net.load_weights(args.trained_model)
+            net.eval()
+            if args.cuda:
+                net = net.cuda()
+            print(' Done.')
+            evaluate(net, dataset)
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(
