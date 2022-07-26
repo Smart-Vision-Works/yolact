@@ -1,7 +1,6 @@
 from data import COCODetection, get_label_map, MEANS, COLORS
 from yolact import Yolact
 import importlib
-YolactONNX = importlib.import_module("yolact-opencv-dnn-cpp-python.main_yolact")
 from utils.augmentations import BaseTransform, FastBaseTransform, Resize
 from utils.functions import MovingAverage, ProgressBar
 from layers.box_utils import jaccard, center_size, mask_iou
