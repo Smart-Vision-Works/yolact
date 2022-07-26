@@ -1015,22 +1015,16 @@ def main(_args):
             dataset = None        
 
         print('Loading model...', end='')
+        net = Yolact()
+        net.load_weights(args.trained_model)
+        net.eval()
+        if args.cuda:
+            net = net.cuda()
         if os.path.splitext(args.trained_model)[-1]==".onnx":
-            net = Yolact()
-            net.load_weights(args.trained_model)
-            net.eval()
-            if args.cuda:
-                net = net.cuda()
-            # net = YolactONNX.yolact(args.trained_model)
-            print(' Done (onnx). ')
+            print(' Done (onnx).')
             evaluate(net, dataset, onnx=True)
         else:
-            net = Yolact()
-            net.load_weights(args.trained_model)
-            net.eval()
-            if args.cuda:
-                net = net.cuda()
-            print(' Done.')
+            print(' Done (pth).')
             evaluate(net, dataset)
 
 if __name__ == '__main__':
