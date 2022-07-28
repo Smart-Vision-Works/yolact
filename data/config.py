@@ -861,8 +861,7 @@ def set_cfg(config_name:str, _dataset_path = None):
     """ Sets the active config. Works even if cfg is already imported! """
     global cfg
     global dataset_path
-    if _dataset_path is not None:
-        dataset_path = _dataset_path
+    dataset_path = _dataset_path
     # Note this is not just an eval because I'm lazy, but also because it can
     # be used like ssd300_config.copy({'max_size': 400}) for extreme fine-tuning
     cfg.replace(eval(config_name))
